@@ -19,6 +19,7 @@ python -m pip install -r requirements.txt
 ```
 
 For some reason, I was still having issues with using this. If python still isn't installing libaries in the right place, then run fix_it.py found in the Backend_Code folder.
+
 ## 🛠 Frontend Code - The Website
 
 Vite was used to see the website. Open an integrated terminal on the Folder "Website". 
@@ -54,3 +55,5 @@ Similarly, if the dataset finishes generating artists, and you'd like to generat
 
 **PLEASE DO NOT DELETE THE CODE DESIGNED TO WAIT FOR THE API.**
 The author assumes no responsibility by taking this code and using it to spam API requests. Doing as such is prohibited by the APIs, and will likely cause a ban. 
+
+All licenses can be seen in allLicenses.txt. 
