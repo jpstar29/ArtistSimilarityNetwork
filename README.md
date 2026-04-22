@@ -1,6 +1,6 @@
 # Artist Similarity Network 🚀
 
-See the full website at: [Artist Network](https://jpstar29.github.io/Artist-Network).
+See the full website at: [Artist Network](https://jpstar29.github.io/ArtistSimilarityNetwork/).
 
 This project displays an artist similarity network in a website. This was done through 3 stages: creating a dataset, creating a networked graph from that dataset (exporting said graph to Gephi), then building the
 website to interact with the graph.
