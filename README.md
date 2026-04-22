@@ -1,6 +1,6 @@
 # Artist Similarity Network 🚀
 
-See the full website at: [Artist Network](https://jpstar29.github.io/Artist-Network)
+See the full website at: [Artist Network](https://jpstar29.github.io/Artist-Network).
 
 This project displays an artist similarity network in a website. This was done through 3 stages: creating a dataset, creating a networked graph from that dataset (exporting said graph to Gephi), then building the
 website to interact with the graph.
@@ -12,13 +12,17 @@ Install all Python libraries with:
 ```
 pip install -r requirements.txt
 ```
+or:
 
-Install my-project with npm:
-
-```bash
-  npm install my-project
-  cd my-project
 ```
+python -m pip install -r requirements.txt
+```
+
+For some reason, I was still having issues with using this. If python still isn't installing libaries in the right place, then run fix_it.py found in the Backend_Code folder.
+## 🛠 Frontend Code - The Website
+
+Vite was used to see the website. Open an integrated terminal on the Folder "Website". 
+With node packet manager, you can run npm run dev. From there, press o and then enter, and the website will load on a local server.
 
 ## 🛠 Backend Code
 
@@ -50,7 +54,3 @@ Similarly, if the dataset finishes generating artists, and you'd like to generat
 
 **PLEASE DO NOT DELETE THE CODE DESIGNED TO WAIT FOR THE API.**
 The author assumes no responsibility by taking this code and using it to spam API requests. Doing as such is prohibited by the APIs, and will likely cause a ban. 
-
-## 🛠 Frontend Code
-
-Vite was used to see the website. With node packet manager, you can run npm run dev. From there, press o and then enter, and the website will load on a local server.

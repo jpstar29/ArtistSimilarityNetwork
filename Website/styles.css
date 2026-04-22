@@ -49,6 +49,7 @@ li {
 }
 
 /* ================= HEADER ================= */
+
 header {
     background-color: #295794;
     color: white;
@@ -137,7 +138,6 @@ header {
     height: 7px;      /* Length of the tick mark */
 }
 
-
 /* ================= GRAPH AREA ================= */
 .graph-container {
     background-color: #CCCCCC;
@@ -183,8 +183,6 @@ header {
     padding-left: 20px;
 }
 
-
-
 /* ================= FOOTER ================= */
 footer {
     background-color: #eee;
@@ -210,8 +208,8 @@ footer {
     100% { margin-left: 0rem; }
 }
 
-/* This is used for small screens, such as laptops and phones. */
-@media (max-width: 1050px) {
+/* This is used for small screens, such as tablets and phones. */
+@media (max-width: 1050px) {/* Anything that isn't as wide as 1050 pixels follows this CSS instead. */
     .layout-container {
         /* Switch from 3 columns to 1 column */
         display: flex;

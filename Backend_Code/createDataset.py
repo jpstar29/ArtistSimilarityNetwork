@@ -11,15 +11,21 @@ import datetime
 BASE_URL = "https://ws.audioscrobbler.com/2.0/"
 MBID_URL = "https://musicbrainz.org/ws/2/artist/" # MusicBrainz API endpoint
 
-if not os.path.exists(r"Backend_Code\CSV_Files"):
+if not os.path.isdir(r"Backend_Code\CSV_Files"):
     os.makedirs(r"Backend_Code\CSV_Files") #CSV_Files may not be a created folder. So we have to create it. This is included in the gitignore.
 
 datasetName = "artistSimilarities"
 csvFilenameGradual = r"Backend_Code\CSV_Files\%s.csv" %(datasetName)
 
-lastArtistFilename = r"Backend_Code\Text Files\lastArtist.txt"
-keysFilename = r"Backend_Code\Text Files\KEYS.txt"
-artistsAtDepthFilename = r"Backend_Code\Text Files\artistsCompletedAtDepth.txt"
+if not os.path.isdir(r"Backend_Code\Text_Files"):
+    os.makedirs(r"Backend_Code\Text_Files") #CSV_Files may not be a created folder. So we have to create it. This is included in the gitignore.
+    raise RuntimeError("Please create a KEYS.txt file as seen in the Text_Files_Template, and instructed in the README.")
+if not os.path.isfile(r"Backend_Code\Text_Files\KEYS.txt"):
+    raise RuntimeError("Please create a KEYS.txt file as seen in the Text_Files_Template, and instructed in the README.")
+
+lastArtistFilename = r"Backend_Code\Text_Files\lastArtist.txt"
+keysFilename = r"Backend_Code\Text_Files\KEYS.txt"
+artistsAtDepthFilename = r"Backend_Code\Text_Files\artistsCompletedAtDepth.txt"
 
 with open(keysFilename, "r", encoding='utf-8') as f:
     keys = f.read().split("\n")

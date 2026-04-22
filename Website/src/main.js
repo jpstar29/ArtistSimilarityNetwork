@@ -1,26 +1,25 @@
 import Sigma from "sigma";
 import Graph from "graphology";
 import { parse } from "graphology-gexf";
-import forceAtlas2 from "graphology-layout-forceatlas2";
 import {bidirectional} from 'graphology-shortest-path';
-
-
-import { scaleOrdinal } from "d3-scale";
-import { schemeTableau10 } from "d3-scale-chromatic";
 
 import noUiSlider from 'nouislider';
 import 'nouislider/dist/nouislider.css';
 
-
-const communities = {"Synthwave":0, "Hip-Hop":1, "Ambient":2, "Soft Pop/Indonesia":3, "Indie/Alternative Rock":4, "Punk Rock":5,
-                    "Instrumental Jazz":6, "Classic 80s Rock":7, "Classic 60s Rock":8, "Memphis Rap":9, "R&B":10, "Vocal Jazz":11,
-                    "Salsa":12, "Brazilian":13, "Reggae":14, "Country":15, "Chill Electronic":16, "Spanish Pop":17, "Ambient Electronic":18,
-                    "Chile":19, "Japanese":20, "Classical":21, "Metal":22, "Reggaeton":23, "Shoegaze":24, "Bossa Nova":25, "Pop":26, "French":27,"Chinese":28,
-                    "Ambient Piano":29, "K-pop Boy Groups":30, "K-pop Girl Groups":31, "Nigeria":32, "Soundtrack":33, "Progressive Rock":34, "Industrial":35,
-                    "Indie Pop":36, "Grunge Rock":37, "Soul":38, "Underground Indie":39, "Electric Pop":40}; //This is my own intereptation of the data from the tags of each artist found in each community, seen in the folder GraphImages.
+const communities = {
+  "Hip-Hop":1, "Memphis Rap":9, "R&B":10, "Soul":38, "Vocal Jazz":11, "Instrumental Jazz":6, 
+  /* Pop */ "Pop":26, "Indie Pop":36, "Underground Indie":39, "Soft Pop/Indonesia":3, 
+  /* Electric */ "Electric Pop":40, "Synthwave":0, "Ambient":2, "Ambient Electronic":18, "Chill Electronic":16, "Ambient Piano":29, "Shoegaze":24, "Industrial":35,
+  /* Rock */ "Classic 60s Rock":8, "Classic 80s Rock":7, "Indie/Alternative Rock":4, "Progressive Rock":34, "Grunge Rock":37, "Punk Rock":5,  "Metal":22,
+  "Country":15,
+  /* Brazilian */ "Bossa Nova":25, "Brazilian":13,"Reggaeton":23,"Reggae":14,"Salsa":12,
+  /* Language */ "Spanish Pop":17, "Nigeria":32, "French":27, "Chile":19, "Japanese":20, "Chinese":28, "K-pop Boy Groups":30, "K-pop Girl Groups":31,
+  /* Instrumental/Orchestra */ "Soundtrack":33, "Classical":21 //This is my own intereptation of the data from the tags of each artist found in each community, seen in the folder Backend_Code\FrequencyGraphs\FrequencyGraphImages.
+  //The genres are ordered this way to group them as best as possible
+};
 
 //Colours
-const backgroundColour = [53, 53, 53];
+const backgroundColour = [53, 53, 53]; //Taken from the hexadecimal #353535 found in sigma container in styles.css
 
 const fadedAdditionEdge = 4; //The smaller the value is, the closer it is to the background (and therefore the harder it is to see). 
 const fadedEdgesColour = [backgroundColour[0] + fadedAdditionEdge, backgroundColour[1] + fadedAdditionEdge, backgroundColour[2] + fadedAdditionEdge];
@@ -57,47 +56,42 @@ const relatedArtistsTitle = document.getElementById("related-artists-title");
 
 let graph, renderer;
 
-// Type and declare internal state:
+// Type and declare internal state: This is used for global variables that resemble with a graph. If there are multiple graphs, then there have to be multiple States. Also it's just nice to have everything in one place
 class State {
-    hoveredNode;
-    searchQuery;
-    highlightNodes = [];
-    showhighlightNodesNeighbours = true;
+    hoveredNode; //When the mouse is above a node but not clicked
+    highlightNodes = []; //All the nodes that need to be highlighted
+    showhighlightNodesNeighbours = true; //All the neighbour nodes of the highlighted nodes. Seen when we click a node (because we want to see that node's neighbours) but not when we see a path or community (when we only want to see those nodes).
     displayShortestPath = false; //Now we want to see nodes by community, we have to distinguish whether we want to see the shortest path.
 
-    // State derived from query:
-    selectedNode;
+    selectedNode; // State derived from query:
     suggestions = new Set();
 
     // State derived from hovered node:
     hoveredNeighbors = new Set(); 
 
-    selectedCommunity
-
-    similarityRangeMin = 0;
+    similarityRangeMin = 0; //Used for the handles of the similarity slider, initally at 0 and 1 to have the whole range
     similarityRangeMax = 1;
     
-    listenersRangeMin = 0;
+    listenersRangeMin = 0; //Used for the handles of the similarity slider, initally at 0 and 1 to have the whole range
     listenersRangeMax = 0;
 
   }
 const state = new State();
 
-function combineSetAndArray(set, array) {
-  let newSet = set
+function combineSetAndArray(set, array) { //Sets are faster than arrays, and store everything uniquely. If there is an item in the array that's already in the set, .add(item) will be ignored.
+  let newSet = set;
   for (let item of array) {
     newSet.add(item);
   }
   return newSet;
 }
 
-function returnRGBString(array) {
-  //Given an array of 3 indices, returns the RGB String associated
+function returnRGBString(array) { //Given an array of 3 indices, returns the RGB String associated
   let color = "rgb(" + array[0] + ", " + array[1] + ", " + array[2] + ")";
   return color;
 }
 
-function addTransparency(colour, transparency) {
+function addTransparency(colour, transparency) { //Given a colour, it finds the balance between that colour and the background colour dependent on the transparency. In essence, fading it. 
   //Colour is in the string form: "rgb(x, x, x)"
   let colourArray = ['', '', '']; //Each index corresponds to the rgb values, so like [128,128,128]
   const targetArray = backgroundColour; //This is the background as a rgb value. The idea is that this represents 100% transparency (as any colour that is set to this won't be seen.)
@@ -126,7 +120,7 @@ function addTransparency(colour, transparency) {
   return `rgb(${colourArray[0]}, ${colourArray[1]}, ${colourArray[2]})`;
 }
 
-function updateArtistPathLabels(value) {
+function updateArtistPathLabels(value) {//Updates the pathArtist text boxes automatically. The first one is selected, unless there's something there already.
   if (pathArtistOne.value == "") {
     pathArtistOne.value = value; //If we're updating the display, we should update these too.
   } else {
@@ -134,44 +128,43 @@ function updateArtistPathLabels(value) {
   }
 }
 
-function updateMetadata(node) {  
-  
+function updateMetadata(node) {//Creates all the text for the metadata panel dependent upon the node
   let artistName = graph.getNodeAttribute(node, "artist_name"); //Using a variable just for this since we need it twice
   document.getElementById("artist-name").textContent = artistName;
 
   const genreCommunity = Object.keys(communities).find(key => communities[key] === graph.getNodeAttribute(node, "communityID")); //Finding the community of the node, and seeing which genre it's associated with in the dictionary
 
   let tags = graph.getNodeAttribute(node, "tags");
-  tags = tags.replace(/\[|\]/g,'').split(',').map(item => item.trim().replace(/'/g, '')); //This turns '['A', 'B', 'C']' into ['A', 'B', 'C'] =
+  tags = tags.replace(/\[|\]/g,'').split(',').map(item => item.trim().replace(/'/g, '')); //This turns a stringifed array like '['A', 'B', 'C']' into an array ['A', 'B', 'C']
   let tagString = "";
   for (let tag of tags) {
     tagString += tag + ", " //Getting rid of the first and last characters since they're single quotes
   }
-  document.getElementById("artist-tags").textContent = `Tags: ${tagString.slice(0, tagString.length - 2)}`; //.length - 2 to get rid of the comma at the end
+  document.getElementById("artist-tags").textContent = `Tags: ${tagString.slice(0, tagString.length - 2)}`; //.length - 2 to get rid of the comma and space at the end
   document.getElementById("artist-genre").textContent = `Genre: ${genreCommunity}`;
   document.getElementById("artist-popularity").textContent = `Listeners: ${graph.getNodeAttribute(node, "listeners")}`;
 
-  // 1. Clear the old list
-  relatedArtists.innerHTML = "";
+  relatedArtists.innerHTML = ""; //Clear the old list
 
   let messages = []; //Array of dictionaries, to be sorted by weight later
 
   for (let neighbourNode of graph.neighbors(node)) {
     let artistName = graph.getNodeAttribute(neighbourNode, "artist_name");
-    let similarity = Math.round(graph.getEdgeAttribute(graph.edge(node, neighbourNode), "weight") * 10000) / 100; //Multiplying it by 100 and dividing it by 100 to round it to 2d.p. But really 10000 because we want it as a percentage.
-    messages.push({"message":`${artistName} who is ${similarity}% similar`, "weight":similarity});
+    let edgeWeight = graph.getEdgeAttribute(graph.edge(node, neighbourNode), "weight");
+    let similarity = (edgeWeight * 100).toFixed(2) + "%"; //toFixed(2) keeps the trailing 0s. 
+    messages.push({"message":`${artistName} who is ${similarity} similar`, "weight":edgeWeight});
   };
 
   messages.sort((a, b) => b.weight - a.weight); //Sort by high to low
 
   messages.forEach(message => {
-    const li = document.createElement("li");
+    const li = document.createElement("li"); //A li item (basically a bullet point)
     li.textContent = message["message"];
     relatedArtists.appendChild(li);
   })
 }
 
-function reset() {
+function reset() { //Resets all the variables to their initial state, so the graph can look like it did when the website loaded
   state.highlightNodes = [];
   state.hoveredNode = undefined;
   state.hoveredNeighbors = new Set();
@@ -192,25 +185,25 @@ function reset() {
 }
 
 function convertScale(initialNumber, maxNumber) {
-    //Given a number between 0 and 1, it'll convert it to 0 and maxNumber.
-    //Presume for now that we want it between 1 - minNumber and 1. 
+    //Given an initialNumber between 0 and 1, it'll convert it to 0 and maxNumber.
+    //Presume for now that we want it between 1 - maxNumber and 1. 
     
     const scale = 1 / maxNumber;
     return (initialNumber / scale);
 }
 
 function errorAnimate(input) {
-  input.classList.add("search-error");
+  input.classList.add("search-error"); //See the CSS
   setTimeout(() => input.classList.remove("search-error"), 1000); //Remove it after a second.
 }
 
-function setHoveredNode(node) {
-    if (node) {
+function setHoveredNode(node) { //Set the hoveredNode to the node
+    if (node) { //Used when the mouse moves on the node
       state.hoveredNode = node; //Selecting the node 
-      state.hoveredNeighbors = new Set(graph.neighbors(node));
+      state.hoveredNeighbors = new Set(graph.neighbors(node)); //Storing the node's neighbours
     }
 
-    if (!node) {
+    if (!node) { //Used when the mouse moves away from the node
       state.hoveredNode = undefined;
       state.hoveredNeighbors = new Set();
     }
@@ -221,10 +214,9 @@ function setHoveredNode(node) {
       skipIndexation: true,
     });
 
-  }
+}
 
-function selectNode(node) {
-  //When the user either clicks or selects a node, we call this to update and whatnot. 
+function selectNode(node) {//When the user either clicks or selects a node, we call this to update.
   state.displayShortestPath = false;
   updateMetadata(node);
   updateArtistPathLabels(graph.getNodeAttribute(node, "artist_name"));
@@ -240,7 +232,7 @@ function selectNode(node) {
   });
 }
 
-function addUserNode(query, refresh) {
+function addUserNode(query, refresh) { //Takes the user input and finds the node they're trying to search for
   query = query.trim(); //Trimming any unnesscary white space before or after the string.
   const lcQuery = query.toLowerCase();
   const suggestions = graph
@@ -250,7 +242,7 @@ function addUserNode(query, refresh) {
   state.suggestions = new Set(suggestions.map(({ id }) => id));
 
   if (state.suggestions.size == 0) {
-    return "ERROR: invalidArtist";
+    return "ERROR: invalidArtist"; //Artist wasn't found
   }
     
   let foundNode;
@@ -264,8 +256,8 @@ function addUserNode(query, refresh) {
   }
 
   let nodeListeners = graph.getNodeAttribute(foundNode, "listeners");
-  if (nodeListeners > state.listenersRangeMax || nodeListeners < state.listenersRangeMin) { //We could find the artist but it's currently hidden.
-    state.suggestions = new Set(); //Make sure the nodes that were suggested were empty.
+  if (nodeListeners > state.listenersRangeMax || nodeListeners < state.listenersRangeMin) { //We could find the artist but it's currently hidden due to the threshold.
+    state.suggestions = new Set(); //Make sure the nodes that were suggested were empty, back to normal.
     return "ERROR: nodeListenersNotInRange";
   }
 
@@ -275,7 +267,7 @@ function addUserNode(query, refresh) {
 
   state.suggestions = new Set();
 
-  if (refresh) {
+  if (refresh) { //If false, then we just return back the node we were looking for. Otherwise, we'll update the graph.
     state.selectedNode = foundNode;
     updateArtistPathLabels(graph.getNodeAttribute(state.selectedNode, "artist_name"));
     updateMetadata(state.selectedNode);
@@ -297,9 +289,7 @@ function addUserNode(query, refresh) {
   return foundNode;
 }
 
-function displayShortestPath () {
-
-  //state.highlightNodes = ['cc197bad-dc9c-440d-a5b5-d52ba2e14234', '8da127cc-c432-418f-b356-ef36210d82ac']
+function displayShortestPath () {//Displays the shortest path between two nodes by highlighting all the nodes on the path
   
   let sourceNode,  targetNode;
   //Since the code is identical, there might be a way to use a nested function to save space. But for now this works.
@@ -309,7 +299,7 @@ function displayShortestPath () {
   }
 
   if (sourceNode == "ERROR: invalidArtist" || sourceNode == undefined) {
-      sourceNode = state.highlightNodes[0]; //If not, we just use whatever the user clicked on first.
+      sourceNode = state.highlightNodes[0]; //If the sourceNode is invalid, we just use whatever the user clicked on first.
 
       if (sourceNode == undefined) {
         errorAnimate(pathArtistOne); //If the user hasn't clicked anything then we return nothing.
@@ -322,7 +312,7 @@ function displayShortestPath () {
   
   pathArtistOne.value = graph.getNodeAttribute(sourceNode, "label"); //In case it's different, show it so it's obvious what the source node is.
 
-  if (pathArtistTwo.value != "") {
+  if (pathArtistTwo.value != "") { //Exact same logic as pathArtistOne
     targetNode = addUserNode(pathArtistTwo.value, false);
   }
   if (targetNode == "ERROR: invalidArtist" || targetNode == undefined || targetNode == sourceNode) {
@@ -339,13 +329,13 @@ function displayShortestPath () {
 
   pathArtistTwo.value = graph.getNodeAttribute(state.highlightNodes[state.highlightNodes.length - 1], "label"); //If there is no value there, show it so it's obvious what the source node is.
 
-  const path = bidirectional(graph, sourceNode, targetNode);
+  const path = bidirectional(graph, sourceNode, targetNode); //Graphology function which calculates the path, and returns back the nodes from the sourceNode to the targetNode
 
   relatedArtists.innerHTML = "";
   let nodeCounter = 0;
   for (let node of path) {
     state.highlightNodes.push(node) //Add it to the nodes to be displayed
-    if (nodeCounter != 0) { //Probably an easier way to do this
+    if (nodeCounter != 0) { //Probably an easier way to do this, but from when nodeCounter is 1 onwards, we connect nodeCounter - 1 to nodeCounter (so 0 to 1, 1 to 2)'s names so (A to B, B to C)
       const li = document.createElement("li"); //Create a new list item
       li.textContent = `${graph.getNodeAttribute(path[nodeCounter - 1], "artist_name")} connects to ${graph.getNodeAttribute(path[nodeCounter], "artist_name")}`;
       relatedArtists.appendChild(li);
@@ -362,7 +352,7 @@ function displayShortestPath () {
   });
 }
 
-function showCommunityNodes(communityID) {
+function showCommunityNodes(communityID) { //All the nodes that have the communityID are added to highlightNodes
   state.highlightNodes = [];
   state.showhighlightNodesNeighbours = false;
   graph.forEachNode(node => {
@@ -376,7 +366,7 @@ function showCommunityNodes(communityID) {
   });
 }
 
-function readUserNode() {
+function readUserNode() { //Calls addUserNode() to add the node the user searched.
   if (addUserNode(artistSearch.value || "", true).startsWith("ERROR")) {
     //We weren't able to find the artist. So let's display that information to the user.
     errorAnimate(artistSearch);
@@ -385,7 +375,7 @@ function readUserNode() {
 }
 
 function main() {
-
+  //All the eventListeners for the HTML Elements
   artistSearch.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
         readUserNode();
@@ -396,7 +386,7 @@ function main() {
     readUserNode();
   });
 
-  for (let community in communities) {
+  for (let community in communities) { //Creating the drop-down list for the filter by genre
     const option = document.createElement('option');
     option.value = community;
     genreOptions.appendChild(option);
@@ -404,11 +394,8 @@ function main() {
 
   genreInput.addEventListener('input', function(e) {
       const selectedValue = e.target.value;
-
-      // 1. Check if the value matches one of your pre-established categories
-      // (This prevents the code from running if they just type a single letter)
       
-      if (selectedValue in communities) {
+      if (selectedValue in communities) { // Check if the value matches one of the pre-established categories
         showCommunityNodes(communities[selectedValue])
       }
   });
@@ -417,7 +404,7 @@ function main() {
     displayShortestPath();
   });
 
-  noUiSlider.create(similarityRange, {
+  noUiSlider.create(similarityRange, { //noUiSlider gives the double handle slider needed to make this work
     start: [0, 1], // The initial positions (the most extreme because we want to see the full graph)
     connect: true, // This creates the "pretty" bar
     range: {
@@ -444,13 +431,13 @@ function main() {
     reset();
   });
 
-  fetch("artistsColouredTaggedGephi.gexf")
+  fetch("artistsColouredTaggedGephi.gexf") //Get the file and turn it into a graph Graphology understands
     .then(res => res.text())
     .then(gexf => {
       graph = parse(Graph, gexf);
       console.log("Graph loaded! Nodes:", graph.order);
 
-      renderer = new Sigma(graph, container, {
+      renderer = new Sigma(graph, container, {//Creating a renderer
         labelRenderedSizeThreshold : 15,
         minCameraRatio: 0.01, // Minimum zoom (zoomed in)
         maxCameraRatio: 1,  // Maximum zoom (zoomed out)
@@ -460,7 +447,7 @@ function main() {
         
       });
 
-      let maximumListeners = -1; //We can do something (maybe clever) to find out the maximum size of listeners. Whilst attributing the necessary sizes and labels, we'll use a variable to check the maximum.
+      let maximumListeners = -1; //We can do something to find out the maximum size of listeners. Whilst attributing the necessary sizes and labels, we'll use a variable to check the maximum.
 
       graph.forEachNode((node, attributes) => {
           graph.setNodeAttribute(node, "size", attributes.size / 4);
@@ -497,8 +484,8 @@ function main() {
           values: 6, //Keep it the same as the similarity scale
           format: {
             to: function (value) {
-                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M'; //This is to decrease the size of the text, changing 1000000 to 1M.
-                if (value >= 1000) return (value / 1000).toFixed(0) + 'K'; //This is to decrease the size of the text, changing 1000 to K.
+                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M'; //This is to decrease the size of the text, changing 1000000 to 1M. toFixed(1) means 1 decimal place
+                if (value >= 1000) return (value / 1000).toFixed(0) + 'K'; //This is to decrease the size of the text, changing 1000 to K. toFixed(0) means no decimal places
                 return value;
             }
           }
@@ -506,15 +493,12 @@ function main() {
       });
       
       listenersRange.noUiSlider.on('update', function (values, handle) {
-
         if (handle == 0) { //We've selected the left handle.
           state.listenersRangeMin = values[handle];
         }
-
         if (handle == 1) { //We've selected the right handle.
           state.listenersRangeMax = values[handle];
         }
-
         renderer.refresh({
           // We don't touch the graph data so we can skip its reindexation
           skipIndexation: true,
@@ -534,21 +518,21 @@ function main() {
         });
       });
 
-
       graph.forEachEdge((edge, attributes, source, target) => {
           let sourceColour = graph.getNodeAttribute(source, "color");
           graph.setEdgeAttribute(edge, "baseColour", sourceColour);
           if (attributes.weight == undefined) { //ERROR: This is bad. This means there are edges with no weight attribute for some reason.
             attributes.weight = 0.5; //Assign a weight halfway between 0 and 1.
           }
-          let transparency = convertScale(attributes.weight, 0.4) //Making any edge connection's transparency between two nodes a maximum of 0.4.
+          let transparency = convertScale(attributes.weight, 0.4) //Making any edge connection's transparency between two nodes a maximum of 0.4, so we can see the graph without hurting our eyes.
           sourceColour = addTransparency(sourceColour, transparency);
           graph.setEdgeAttribute(edge, "color", sourceColour);
-          graph.setEdgeAttribute(edge, "zIndex", 10); //Let each node have a value of 10, to allow for nodes to have 0 (and therefore lower) values later. 1 should work, but giving it a little bit of buffer room.
+          graph.setEdgeAttribute(edge, "zIndex", 10); //Let each node have a value of 10, to allow for nodes to have 0 (and therefore lower) values later, so that they're drawn below the graph. 
+          // 1 should work, but giving it a little bit of buffer room.
       });
 
       // Bind graph interactions:
-      renderer.on("enterNode", ({ node }) => {
+      renderer.on("enterNode", ({ node }) => {//Mouse has hovered over a node
           setHoveredNode(node);
       });
 
@@ -559,15 +543,14 @@ function main() {
         } else {
           state.selectedNode = node; //Highlight the node.
         }
-        
         selectNode(node)
       });
 
-      renderer.on("leaveNode", () => {
+      renderer.on("leaveNode", () => {//Mouse has stopped hovering over a node
         setHoveredNode(undefined);
       });
 
-      renderer.on("downStage", () => {
+      renderer.on("downStage", () => {//Mouse clicks on the grey part of the graph
         state.selectedNode = undefined; //Deselect the node.
           // Refresh rendering
         renderer.refresh({
@@ -608,7 +591,7 @@ function main() {
 
         if ((displayNodes.size != 0 && !displayNodes.has(node) && state.hoveredNode !== node)) {
           res.label = "";
-          res.color = returnRGBString(fadedNodesColour);
+          res.color = returnRGBString(fadedNodesColour); //Fading the nodes - that grey thing that happens
           res.zIndex = 0; //Layer them below the nodes that we want to see. 
         }
 
@@ -640,8 +623,8 @@ function main() {
               }
               return res;
             }
-        res.color = returnRGBString(fadedEdgesColour);
-        res.zIndex = 0;
+        res.color = returnRGBString(fadedEdgesColour); //Fading the edges - that grey thing that happens
+        res.zIndex = 0; //Layer them below the edges that we want to see. 
         return res;
       }
       
