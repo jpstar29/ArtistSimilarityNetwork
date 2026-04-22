@@ -25,17 +25,22 @@ Install my-project with npm:
 If you'd like to run the dataset for yourself to generate new artists, you will need an API Key from Last.fm API and a personal email address for the MusicBrainz API.
 You can generate an API key from Last.fm by doing the following steps:
 
-* 
-* 
-* 
+* Log into [Last.fm](https://www.last.fm/home), or create an account
+* Go to the API Account Creation Page [here:](https://www.last.fm/api/account/create)
+* Fill out the application form. For Application Name, you can put MusicNetworkingGraph - and in the description say what you're using this for (such as adding more artists or starting fresh.)
+You can leave the callback URL blank - as the website doesn't call from the API directly. Application Homepage can be the Github repo (or just blank).
+* Click submit, and you'll get an API key and a secret password.
 
-Alternatively, see [Last.fm's guidelines](https://en.wikipedia.org/wiki/The_1975) for further details.
+Alternatively, see [Last.fm's API Authentication](https://www.last.fm/api/authentication) and click "apply for a key". This will take you to the application form.
+
+**IMPORTANT: DO NOT PUT PERSONAL INFORMATION IN TEXT_FILES_TEMPLATE.** Create a Text_Files folder, and copy all of the Text Files in Text_Files_Replace to there.
+Then follow the steps:
 
 In Backend Code\Text Files\KEYS.txt, you will see two lines of text - "API KEY" and "example@gmail.com". Please replace these with your exact API Key and your exact email address - no spaces before or after.
 From there, you can run the dataset, with any artists you desire at whatever depth you desire.
 
 If you'd like to change the name of the dataset you're writing to, please don't create a new CSV file. Instead, in createDataset.py on Line 14, change datasetName to whatever you desire (something that a CSV file could be named).
-The program will automatically create a new dataset with that file. All datasets are stored in Backend_Code\CSV_Files.
+The program will automatically create a new dataset with that file. All datasets are stored in Backend_Code\CSV_Files (automatically generated if you run createDataset.py, however you'll have to create it if you're finding a CSV file elsewhere).
 
 Currently, the dataset gets updated every 25 artists - which takes approximately a minute. If you'd like to see artists being generated faster, you can reduce this number by changing updateDataset on line 35 - but it's strongly recommended not to go under 10 (it's a bit overkill to be saving to the csv that often). In general, somewhere between 25 to 75 is ideal if you want to run the dataset overnight.
 
