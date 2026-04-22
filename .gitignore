@@ -1,0 +1,17 @@
+Website/.DS_Store
+Website/Thumbs.db
+Website/.env
+Website/.env.local
+Website/node_modules/
+Website/build/
+Website/.next/
+Website/coverage/
+Website/npm-debug.log*
+Website/yarn-debug.log*
+Website/yarn-error.log*
+oldFiles/
+Backend_Code/venv/
+Backend_Code/Testing/
+Backend_Code/GEXF_Files/
+Backend_Code/Text_Files/
+Backend_Code/CSV_Files/
