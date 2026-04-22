@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Artist Network Explorer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <!-- Starting the handshake between Google to get fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet"> <!-- Display = swap (in case for some reason poppins is taking too long to get) -->
+
+    <!-- Link to the CSS file -->
+  <script type="module" crossorigin src="./assets/index-HPi8MP7S.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DTYCVJdj.css">
+</head>
+
+<body>
+    <!-- ================= HEADER ================= -->
+    <header>
+        <h1>Artist Network Explorer</h1>
+        <p>Interactive visualisation of musical similarity networks</p>
+    </header>
+
+    <!-- ================= MAIN LAYOUT ================= -->
+    <div class="layout-container">
+
+        <!-- ========== LEFT SIDEBAR (Controls) ========== -->
+        <aside class="controls-panel">
+
+            <h2>Controls</h2>
+
+            <!-- Artist Search -->
+            <div class="control-group">
+                <label for="artist-search">Search Artist</label>
+                <input type="text" id="artist-search" placeholder="Enter artist name" required maxlength="40">
+                <button id="search-button">Search</button>
+            </div>
+
+            <!-- Community Filter -->
+            <div class="control-group">
+                <label for="community-select">Type or select a genre:</label>
+                <input list="genre-options" id="genre-input" name="category"> <!-- genre-options must be the same for input and datalist -->
+
+                <datalist id="genre-options"> </datalist>
+            </div>
+
+            <!-- Similarity Threshold -->
+            <div class="control-group">
+                <label for="similarity-range">Similarity Threshold</label>
+                <div class="range-slider"> 
+                    <div id="similarity-range" style="margin: 20px auto;"></div>
+                </div>
+            </div>
+
+            <!-- Listeners Threshold -->
+            <div class="control-group">
+                <label for="listeners-range">Listeners Threshold</label>
+                <div class="range-slider"> 
+                    <div id="listeners-range" style="margin: 20px auto;"></div>
+                </div>
+            </div>
+
+            <!-- Shortest Path -->
+            <div class="control-group">
+                <h2>Find Shortest Path</h2>
+                <input type="text" id="path-artist-1" placeholder="Artist 1">
+                <input type="text" id="path-artist-2" placeholder="Artist 2">
+                <button id="path-button">Find Path</button>
+            </div>
+
+            <div class="control-group">
+                <button id="reset" type="button">Reset</button>
+            </div>
+        </aside>
+
+        <!-- ========== GRAPH AREA ========== -->
+        <main class="graph-container">
+            <div id="sigma-container"></div>
+        </main>
+
+        <!-- ========== RIGHT SIDEBAR (Metadata) ========== -->
+        <aside id="metadata-panel">
+            <h2>Artist Information</h2>
+            <h3 id="artist-name">Select an artist</h3>
+
+            <p id="artist-genre">Genre:</p>
+            <p id="artist-popularity">Listeners:</p>
+            <p id="artist-tags"> Artist Tags: </p>
+
+            <hr>
+
+            <h4 id="related-artists-title">Top Related Artists</h4>
+            <ul id="related-artists"></ul>
+
+        </aside>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>Third Year Dissertation Project</p>
+    </footer>
+
+    <!-- Source Code --> 
+
+</body>
+</html>

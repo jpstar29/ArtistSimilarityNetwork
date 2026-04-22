@@ -1,0 +1,6 @@
+requests
+pandas
+python-louvain
+networkx
+plotly
+matplotlib

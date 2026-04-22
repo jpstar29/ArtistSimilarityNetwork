@@ -1,0 +1,13 @@
+API_KEY
+example@gmail.com
+
+Instructions:
+
+As the README instructs, replace where it says "API_KEY" with your real Last.fm API key. Look at the README for how to create your own.
+Similarly, replace example@gmail.com with your real email address.
+The first two lines should look something like this: (This is a fake key, please don't use it)
+
+f7a2d9b4e1c842a5b3f0e6d7c1a9b2d4
+youremailaddress@domain.com
+
+This file is included in the gitignore. So any git commits you make won't expose your identity.
